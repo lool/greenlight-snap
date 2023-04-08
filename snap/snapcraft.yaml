@@ -11,9 +11,8 @@ confinement: devmode # use 'strict' once you have the right plugs and slots
 parts:
   yarn:
     source: yarn
-    plugin: npm
-    npm-include-node: true
-    npm-node-version: 16.15.0
+    plugin: nil
+    build-snaps: [node]
     override-build: |
       snapcraftctl build
       # per official yarn installation docs
