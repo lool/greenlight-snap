@@ -1,0 +1,45 @@
+name: greenlight
+base: core22
+version: '2.0.0-beta6'
+summary: open-source client for xCloud and xHome streaming
+description: |
+  Greenlight is an open-source client for xCloud and xHome streaming made in Javascript and Typescript. The client is an application wrapper around xbox-xcloud-player.
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: devmode # use 'strict' once you have the right plugs and slots
+
+parts:
+  yarn:
+    source: yarn
+    plugin: npm
+    npm-include-node: true
+    npm-node-version: 16.15.0
+    override-build: |
+      snapcraftctl build
+      # per official yarn installation docs
+      # https://yarnpkg.com/getting-started/install
+      corepack enable
+      # not sure why stable doesn't work; it returns Usage Error: Invalid
+      # package manager specification in CLI arguments; expected a semver
+      # version
+      # https://stackoverflow.com/questions/73673624/cannot-activate-yarn
+      corepack prepare yarn@3.2.3 --activate
+
+  greenlight:
+    after: [yarn]
+    plugin: nil
+    build-packages:
+      # for xal
+      - cargo
+      # for opj_decompress used by electron-builder via app-builder
+      - libopenjp2-tools
+    build-snaps: [yq]
+    source: https://github.com/unknownskl/greenlight.git
+    override-build: |
+      # drop AppImage build and do a dir build instead
+      yq -i '.linux.target.[0] = "dir"' electron-builder.yml
+      # install deps
+      yarn
+      # actual build
+      yarn build
+
